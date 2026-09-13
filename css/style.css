@@ -470,3 +470,35 @@ html, body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--surface); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* -- Mobile Responsive Overrides ----------------------------------------------- */
+@media (max-width: 950px) {
+  #app { height: 100vh; height: -webkit-fill-available; }
+  #main { flex-direction: column; }
+  #sidebar { 
+    width: 100%; 
+    height: 35vh; 
+    border-left: none; 
+    border-top: 4px solid var(--border);
+    flex-direction: row; 
+    flex-wrap: wrap; 
+  }
+  #sidebar > section { flex: 1; min-width: 200px; }
+  
+  #hud { 
+    height: auto; 
+    padding: 10px; 
+    flex-wrap: wrap; 
+    justify-content: center;
+    gap: 10px; 
+  }
+  .hud-item { margin-bottom: 5px; }
+  .hud-label { display: none; } /* Hide labels on mobile to save space */
+  
+  /* Make tower items smaller on mobile */
+  .tower-item { padding: 6px; margin-bottom: 6px; }
+  .tower-icon { width: 14px; height: 14px; margin-right: 6px; }
+  .tower-name { font-size: 14px; }
+  .tower-cost { font-size: 12px; }
+  .tower-desc { font-size: 10px; line-height: 1.2; }
+}
