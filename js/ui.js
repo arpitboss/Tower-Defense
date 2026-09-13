@@ -4,14 +4,16 @@
 import { TOWERS, ENEMIES, GAME, towerStats, towerTotalCost } from './config.js';
 
 export class UI {
-  constructor(game) {
+  constructor(game, audio) {
     this.game = game;
+    this.audio = audio;
 
     // Cache DOM refs
     this.livesEl = document.getElementById('lives-val');
     this.goldEl = document.getElementById('gold-val');
     this.waveEl = document.getElementById('wave-val');
     this.scoreEl = document.getElementById('score-val');
+    this.highscoreEl = document.getElementById('highscore-val');
     this.fpsEl = document.getElementById('fps-val');
     this.entityEl = document.getElementById('entity-val');
 
@@ -52,6 +54,12 @@ export class UI {
 
     // Periodic telemetry update
     setInterval(() => this._updatePerf(), 250);
+
+    // Tutorial overlay handling
+    this.tutorialEl = document.getElementById('tutorial-overlay');
+    if (!localStorage.getItem('td_tutorial_seen')) {
+      this.tutorialEl.classList.remove('hidden');
+    }
   }
 
   _buildShop() {
@@ -94,9 +102,31 @@ export class UI {
       this.game.runStressTest();
     });
 
-    this.btnWave.addEventListener('click', () => this.game.sendWave());
+    this.btnWave.addEventListener('click', () => {
+      this.game.sendWave();
+      if (this.audio) this.audio.play('click');
+    });
     this.btnUpgrade.addEventListener('click', () => this.game.upgradeSelected());
     this.btnSell.addEventListener('click', () => this.game.sellSelected());
+
+    const btnSound = document.getElementById('btn-sound');
+    if (btnSound) {
+      btnSound.addEventListener('click', () => {
+        if (!this.audio) return;
+        const enabled = this.audio.toggle();
+        btnSound.textContent = enabled ? '🔊' : '🔇';
+        if (enabled) this.audio.play('click');
+      });
+    }
+
+    const btnCloseTutorial = document.getElementById('btn-close-tutorial');
+    if (btnCloseTutorial) {
+      btnCloseTutorial.addEventListener('click', () => {
+        localStorage.setItem('td_tutorial_seen', '1');
+        this.tutorialEl.classList.add('hidden');
+        if (this.audio) this.audio.play('click');
+      });
+    }
   }
 
   _highlightSpeed(speed) {
@@ -131,6 +161,9 @@ export class UI {
     if (this._lastScore !== g.score) {
       this._lastScore = g.score;
       this.scoreEl.textContent = g.score;
+      if (this.highscoreEl) {
+        this.highscoreEl.textContent = g.bestScore;
+      }
     }
 
     const waveChanged = this._lastWave !== g.waves.waveNum;
@@ -167,16 +200,16 @@ export class UI {
     const State = g.constructor.State;
 
     if (g.state === State.OVER) {
-      this.showOverlay('CORE BREACH', `Invasion terminated at Wave ${g.waves.waveNum} — Final Score: ${g.score}`, [
-        { label: 'REBOOT PROTOCOL', action: () => { g.restart(); this.hideOverlay(); } },
+      this.showOverlay('DEFEAT', `The kingdom fell at Wave ${g.waves.waveNum}. Score: ${g.score}`, [
+        { label: 'TRY AGAIN', action: () => { if (this.audio) this.audio.play('click'); g.restart(); this.hideOverlay(); } },
       ]);
     } else if (g.state === State.WON) {
-      this.showOverlay('SECTOR SECURED', `All 50 waves eliminated! Final Score: ${g.score}`, [
-        { label: 'PLAY AGAIN', action: () => { g.restart(); this.hideOverlay(); } },
+      this.showOverlay('VICTORY!', `All 50 waves conquered! Final Score: ${g.score}`, [
+        { label: 'PLAY AGAIN', action: () => { if (this.audio) this.audio.play('click'); g.restart(); this.hideOverlay(); } },
       ]);
     } else if (g.state === State.PAUSED) {
-      this.showOverlay('SYSTEM PAUSED', 'Press SPACE or click Resume to continue operations', [
-        { label: 'RESUME', action: () => { g.togglePause(); this.hideOverlay(); } },
+      this.showOverlay('GAME PAUSED', 'Press SPACE or click Resume to continue', [
+        { label: 'RESUME', action: () => { if (this.audio) this.audio.play('click'); g.togglePause(); this.hideOverlay(); } },
       ]);
     } else {
       this.hideOverlay();
@@ -205,7 +238,7 @@ export class UI {
       <div class="stat-row"><span>Fire Rate</span><span>${stats.rof.toFixed(1)}/s</span></div>
     `;
     if (stats.splash) html += `<div class="stat-row"><span>Splash</span><span>${stats.splash}px</span></div>`;
-    if (stats.slow) html += `<div class="stat-row"><span>Cryo Slow</span><span>${Math.round(stats.slow * 100)}%</span></div>`;
+    if (stats.slow) html += `<div class="stat-row"><span>Frost Slow</span><span>${Math.round(stats.slow * 100)}%</span></div>`;
     if (stats.chain) html += `<div class="stat-row"><span>Chain</span><span>${stats.chain} arcs</span></div>`;
     if (stats.piercing) html += `<div class="stat-row"><span>Armor Piercing</span><span>Active</span></div>`;
 
@@ -224,7 +257,7 @@ export class UI {
 
     // Sell button
     const refund = Math.floor(t.totalCost * GAME.sellRatio);
-    this.btnSell.textContent = `DECOMMISSION (+${refund}g)`;
+    this.btnSell.textContent = `SELL (+${refund}g)`;
   }
 
   _updatePerf() {
@@ -235,8 +268,15 @@ export class UI {
   }
 
   showMenu() {
-    this.showOverlay('BASTION PROTOCOL', 'Defend the core terminal against 50 waves of cybernetic incursions', [
-      { label: 'INITIALIZE DEFENSE', action: () => { this.game.start(); this.hideOverlay(); } },
+    // Show best score on load
+    if (this.highscoreEl) this.highscoreEl.textContent = this.game.bestScore;
+    this.showOverlay('KINGDOM DEFENSE', 'Defend the castle against 50 waves of orcs and monsters', [
+      { label: 'START BATTLE', action: () => {
+        if (this.audio) this.audio.init();
+        if (this.audio) this.audio.play('click');
+        this.game.start();
+        this.hideOverlay();
+      } },
     ]);
   }
 

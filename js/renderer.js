@@ -25,18 +25,27 @@ export class Renderer {
     const ctx = this.bgCtx;
     const c = GRID.cell;
 
-    // Deep sci-fi backdrop
-    const grad = ctx.createLinearGradient(0, 0, CANVAS_W, CANVAS_H);
-    grad.addColorStop(0, '#090d16');
-    grad.addColorStop(1, '#05070d');
-    ctx.fillStyle = grad;
+    // Sandy desert background
+    ctx.fillStyle = '#e2d2a4';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Procedural scenery (rocks/dirt)
+    ctx.fillStyle = '#c8b687';
+    for (let x = 0; x < CANVAS_W; x += c) {
+      for (let y = 0; y < CANVAS_H; y += c) {
+        if (Math.sin(x * 13.1 + y * 97.5) > 0.6) {
+          ctx.beginPath();
+          ctx.arc(x + c/2, y + c/2, 2 + Math.abs(Math.sin(x*y))*3, 0, TAU);
+          ctx.fill();
+        }
+      }
+    }
 
     const pts = PATH_WAYPOINTS.map(([col, row]) => [col * c + HALF_CELL, row * c + HALF_CELL]);
 
-    // Outer conduit glow
-    ctx.strokeStyle = 'rgba(26, 68, 114, 0.45)';
-    ctx.lineWidth = c * 1.65;
+    // Outer dirt path outline
+    ctx.strokeStyle = '#8f7242';
+    ctx.lineWidth = c * 1.6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -44,26 +53,16 @@ export class Renderer {
     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
     ctx.stroke();
 
-    // Trench track bed
-    ctx.strokeStyle = '#121e2c';
-    ctx.lineWidth = c * 1.25;
+    // Inner dirt path
+    ctx.strokeStyle = '#b08d55';
+    ctx.lineWidth = c * 1.4;
     ctx.beginPath();
     ctx.moveTo(pts[0][0], pts[0][1]);
     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
     ctx.stroke();
 
-    // Centerline pulse
-    ctx.strokeStyle = 'rgba(74, 158, 255, 0.25)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([8, 12]);
-    ctx.beginPath();
-    ctx.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Grid coordinates
-    ctx.strokeStyle = 'rgba(70, 110, 160, 0.06)';
+    // Faint grid for placement clarity
+    ctx.strokeStyle = 'rgba(139, 90, 43, 0.15)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = 0; x <= CANVAS_W; x += c) {
@@ -74,35 +73,45 @@ export class Renderer {
     }
     ctx.stroke();
 
-    // Spawn Portal
+    // Enemy Cave (Spawn)
     const spX = pts[0][0], spY = pts[0][1];
-    const spGrad = ctx.createRadialGradient(spX, spY, 2, spX, spY, 22);
-    spGrad.addColorStop(0, '#2ecc71');
-    spGrad.addColorStop(0.6, 'rgba(46, 204, 113, 0.3)');
-    spGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = spGrad;
+    ctx.fillStyle = '#1a1a1a'; // Dark cave hole
     ctx.beginPath();
-    ctx.arc(spX, spY, 22, 0, TAU);
+    if (ctx.ellipse) {
+      ctx.ellipse(spX, spY, 20, 24, 0, 0, TAU);
+    } else {
+      ctx.arc(spX, spY, 22, 0, TAU);
+    }
+    ctx.fill();
+    ctx.fillStyle = '#4a403d'; // Cave rocks
+    ctx.beginPath();
+    ctx.arc(spX - 15, spY - 10, 10, 0, TAU);
+    ctx.arc(spX + 15, spY - 10, 10, 0, TAU);
+    ctx.arc(spX, spY - 18, 12, 0, TAU);
     ctx.fill();
 
-    ctx.fillStyle = '#2ecc71';
-    ctx.font = 'bold 11px Rajdhani, sans-serif';
+    ctx.fillStyle = '#4a2e15';
+    ctx.font = 'bold 12px Fredoka, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('INVASION PORTAL', spX + 24, spY - 20);
+    ctx.fillText('ENEMY CAVE', spX + 24, spY - 24);
 
-    // Defense Core Base
+    // Kingdom Castle (Base)
     const bsX = pts[pts.length - 1][0], bsY = pts[pts.length - 1][1];
-    const bsGrad = ctx.createRadialGradient(bsX, bsY, 2, bsX, bsY, 24);
-    bsGrad.addColorStop(0, '#ff4757');
-    bsGrad.addColorStop(0.6, 'rgba(255, 71, 87, 0.35)');
-    bsGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = bsGrad;
+    ctx.fillStyle = '#8c7b75'; // Castle grey
+    ctx.fillRect(bsX - 20, bsY - 20, 40, 40);
+    // Castle battlements
+    ctx.fillRect(bsX - 22, bsY - 25, 10, 10);
+    ctx.fillRect(bsX - 5, bsY - 25, 10, 10);
+    ctx.fillRect(bsX + 12, bsY - 25, 10, 10);
+    // Castle door
+    ctx.fillStyle = '#4a2e15';
+    ctx.fillRect(bsX - 8, bsY + 4, 16, 16);
     ctx.beginPath();
-    ctx.arc(bsX, bsY, 24, 0, TAU);
+    ctx.arc(bsX, bsY + 4, 8, 0, TAU);
     ctx.fill();
 
-    ctx.fillStyle = '#ff4757';
-    ctx.fillText('CORE PROTOCOL', bsX - 24, bsY - 20);
+    ctx.fillStyle = '#4a2e15';
+    ctx.fillText('KINGDOM CASTLE', bsX - 24, bsY - 30);
 
     ctx.textAlign = 'start';
   }
@@ -122,51 +131,139 @@ export class Renderer {
     this.drawWaveAnnounce(ctx, state);
   }
 
-  // ── Towers (Batched into 7 draw calls total) ───────────────────────
+  // ── Towers (Batched into multi-layer draw calls) ───────────────────────
   drawTowers(ctx, towerMgr) {
     const towers = towerMgr.towers;
     const len = towers.length;
     if (len === 0) return;
     const r = HALF_CELL * 0.72;
 
-    // Pass 1: Pedestal bases
-    ctx.fillStyle = '#172033';
-    ctx.strokeStyle = '#2a4365';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i < len; i++) {
-      const t = towers[i];
-      ctx.rect((t.cx - r) | 0, (t.cy - r) | 0, (r * 2) | 0, (r * 2) | 0);
-    }
-    ctx.fill();
-    ctx.stroke();
-
-    // Pass 2: Colored cores batched by tower type
+    // Draw towers grouped by type
     for (let type = 0; type < TOWERS.length; type++) {
-      ctx.fillStyle = TOWERS[type].color;
-      ctx.beginPath();
-      let any = false;
+      let typeTowers = [];
       for (let i = 0; i < len; i++) {
-        if (towers[i].type === type) {
-          any = true;
-          ctx.rect((towers[i].cx - 4) | 0, (towers[i].cy - 4) | 0, 8, 8);
+        if (towers[i].type === type) typeTowers.push(towers[i]);
+      }
+      if (typeTowers.length === 0) continue;
+      
+      const def = TOWERS[type];
+
+      // Draw bases (static part)
+      ctx.beginPath();
+      for (let i = 0; i < typeTowers.length; i++) {
+        const t = typeTowers[i];
+        if (type === 0 || type === 3) {
+          // Archer & Bombard: Wooden platform
+          ctx.fillStyle = '#6b4226';
+          ctx.strokeStyle = '#3e2723';
+          ctx.lineWidth = 2;
+          if (ctx.roundRect) ctx.roundRect((t.cx - r) | 0, (t.cy - r) | 0, (r * 2) | 0, (r * 2) | 0, 4);
+          else ctx.rect((t.cx - r) | 0, (t.cy - r) | 0, (r * 2) | 0, (r * 2) | 0);
+          ctx.fill(); ctx.stroke();
+          
+          // Inner wooden planks
+          ctx.fillStyle = '#8b5a2b';
+          ctx.fillRect(t.cx - r + 2, t.cy - r + 2, r * 2 - 4, r * 2 - 4);
+        } else {
+          // Artillery, Mage, Sorcerer: Stone tower
+          ctx.fillStyle = type === 4 ? '#2d2d2d' : '#8c7b75'; // Sorcerer is darker stone
+          ctx.strokeStyle = '#4a403d';
+          ctx.lineWidth = 2;
+          if (type === 1) { // Square stone for catapult
+            ctx.rect((t.cx - r) | 0, (t.cy - r) | 0, (r * 2) | 0, (r * 2) | 0);
+          } else { // Round stone for mages
+            ctx.moveTo(t.cx + r, t.cy);
+            ctx.arc(t.cx, t.cy, r, 0, TAU);
+          }
+          ctx.fill(); ctx.stroke();
+          
+          if (type === 2 || type === 4) { // inner stone circle
+            ctx.fillStyle = type === 4 ? '#1a1a1a' : '#6d5f5a';
+            ctx.beginPath();
+            ctx.arc(t.cx, t.cy, r * 0.6, 0, TAU);
+            ctx.fill();
+          }
         }
       }
-      if (any) ctx.fill();
+
+      // Draw turrets (rotating part)
+      for (let i = 0; i < typeTowers.length; i++) {
+        const t = typeTowers[i];
+        ctx.save();
+        ctx.translate(t.cx, t.cy);
+        ctx.rotate(t.angle);
+        
+        ctx.fillStyle = def.color;
+        ctx.strokeStyle = '#3e2723';
+        ctx.lineWidth = 2;
+
+        if (type === 0) { 
+          // Archer: Simple bow
+          ctx.strokeStyle = '#8b5a2b'; // Wood bow
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, 10, -Math.PI / 2, Math.PI / 2);
+          ctx.stroke();
+          // Arrow
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, -1, 14, 2);
+        } else if (type === 1) { 
+          // Artillery: Catapult arm
+          ctx.fillStyle = '#6b4226'; // wood arm
+          ctx.fillRect(-6, -3, 18, 6);
+          ctx.fillStyle = '#4a403d'; // stone payload
+          ctx.beginPath();
+          ctx.arc(10, 0, 4, 0, TAU);
+          ctx.fill();
+        } else if (type === 2) { 
+          // Mage: Floating crystal
+          ctx.fillStyle = '#0ea5e9';
+          ctx.beginPath();
+          ctx.moveTo(8, 0); ctx.lineTo(0, 5); ctx.lineTo(-8, 0); ctx.lineTo(0, -5);
+          ctx.fill();
+          ctx.fillStyle = '#e0f2fe';
+          ctx.beginPath();
+          ctx.moveTo(8, 0); ctx.lineTo(0, 2); ctx.lineTo(-8, 0); ctx.lineTo(0, -2);
+          ctx.fill();
+        } else if (type === 3) { 
+          // Bombard: Thick iron cannon
+          ctx.fillStyle = '#2d2d2d'; // iron
+          ctx.fillRect(-4, -6, 16, 12);
+          ctx.fillStyle = '#1a1a1a';
+          ctx.fillRect(10, -5, 4, 10); // muzzle flare
+        } else if (type === 4) { 
+          // Sorcerer: Dark magic orb
+          ctx.fillStyle = '#a855f7';
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, TAU);
+          ctx.fill();
+          ctx.strokeStyle = '#d8b4fe';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(5, 0); ctx.lineTo(12, 0);
+          ctx.moveTo(-2.5, 4.3); ctx.lineTo(-6, 10);
+          ctx.moveTo(-2.5, -4.3); ctx.lineTo(-6, -10);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
     }
 
-    // Pass 3: Barrels in ONE stroke path
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
+    // Pass 4: Level indicator pips
     for (let i = 0; i < len; i++) {
       const t = towers[i];
-      const barrelLen = r + 4;
-      ctx.moveTo(t.cx, t.cy);
-      ctx.lineTo(t.cx + Math.cos(t.angle) * barrelLen, t.cy + Math.sin(t.angle) * barrelLen);
+      if (t.level > 0) {
+        ctx.fillStyle = TOWERS[t.type].color;
+        const pips = t.level;
+        const spacing = 5;
+        const startX = t.cx - ((pips - 1) * spacing) / 2;
+        for (let p = 0; p < pips; p++) {
+          ctx.beginPath();
+          ctx.arc(startX + p * spacing, t.cy + r - 3, 1.5, 0, TAU);
+          ctx.fill();
+        }
+      }
     }
-    ctx.stroke();
   }
 
   // ── Enemies (Ultra-fast Path-batched drawing) ───────────────────────
@@ -177,96 +274,221 @@ export class Renderer {
     const activeLen = activeList.length;
     if (activeLen === 0) return;
 
-    // Type 0: Scout (8x8 Speed Diamond)
+    // Clutter reduction removed to avoid the "solid translucent snake" look
+    const detail = activeLen > 800 ? 0 : activeLen > 400 ? 1 : 2;
+
+    ctx.globalAlpha = 1.0;
+
+    // Drop Shadows (Ground units only: 0 to 3)
+    if (detail > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      for (let type = 0; type <= 3; type++) {
+        const b = buckets[type];
+        for (let i = 0; i < b.length; i++) {
+          const e = items[b[i]];
+          if (ctx.ellipse) {
+            ctx.moveTo(e.x + e.radius * 0.8, e.y + 4);
+            ctx.ellipse(e.x, e.y + 4, e.radius * 0.8, e.radius * 0.3, 0, 0, TAU);
+          } else {
+            ctx.rect(e.x - e.radius, e.y + 2, e.radius * 2, e.radius * 0.6);
+          }
+        }
+      }
+      ctx.fill();
+    }
+
+    // Type 0: Goblin (Scout) - Small green body
     const b0 = buckets[0];
     if (b0.length > 0) {
-      ctx.fillStyle = '#ff6b6b';
+      ctx.fillStyle = '#84cc16';
       ctx.beginPath();
       for (let i = 0; i < b0.length; i++) {
         const e = items[b0[i]];
-        const x = e.x | 0, y = e.y | 0;
-        ctx.moveTo(x, y - 5);
-        ctx.lineTo(x + 5, y);
-        ctx.lineTo(x, y + 5);
-        ctx.lineTo(x - 5, y);
+        if (detail === 0) {
+          ctx.rect(e.x - e.radius, e.y - e.radius, e.radius * 2, e.radius * 2);
+        } else {
+          ctx.moveTo(e.x + e.radius, e.y);
+          ctx.arc(e.x, e.y, e.radius, 0, TAU);
+        }
       }
       ctx.fill();
     }
 
-    // Type 1: Soldier (12x12 Armored Rect)
+    // Type 1: Orc (Soldier) - Green body, brown leather
     const b1 = buckets[1];
     if (b1.length > 0) {
-      ctx.fillStyle = '#ee5a24';
+      ctx.fillStyle = '#22c55e';
       ctx.beginPath();
       for (let i = 0; i < b1.length; i++) {
         const e = items[b1[i]];
-        ctx.rect((e.x - 6) | 0, (e.y - 6) | 0, 12, 12);
+        if (detail === 0) {
+          ctx.rect(e.x - e.radius, e.y - e.radius, e.radius * 2, e.radius * 2);
+        } else {
+          ctx.moveTo(e.x + e.radius, e.y);
+          ctx.arc(e.x, e.y, e.radius, 0, TAU);
+        }
       }
       ctx.fill();
+      if (detail > 0) {
+        ctx.fillStyle = '#8b5a2b';
+        ctx.beginPath();
+        for (let i = 0; i < b1.length; i++) {
+          const e = items[b1[i]];
+          ctx.rect(e.x - e.radius, e.y - 3, e.radius * 2, 6);
+        }
+        ctx.fill();
+      }
     }
 
-    // Type 2: Tank (18x18 Heavy Armored Octagonal Block)
+    // Type 2: Ogre (Tank) - Huge grey body
     const b2 = buckets[2];
     if (b2.length > 0) {
-      ctx.fillStyle = '#c0392b';
+      ctx.fillStyle = '#475569';
       ctx.beginPath();
       for (let i = 0; i < b2.length; i++) {
         const e = items[b2[i]];
-        ctx.rect((e.x - 9) | 0, (e.y - 9) | 0, 18, 18);
+        if (detail === 0) {
+          ctx.rect(e.x - e.radius, e.y - e.radius, e.radius * 2, e.radius * 2);
+        } else {
+          ctx.moveTo(e.x + e.radius, e.y);
+          ctx.arc(e.x, e.y, e.radius, 0, TAU);
+        }
       }
       ctx.fill();
-
-      ctx.fillStyle = '#5c1010';
-      ctx.beginPath();
-      for (let i = 0; i < b2.length; i++) {
-        const e = items[b2[i]];
-        ctx.rect((e.x - 4) | 0, (e.y - 4) | 0, 8, 8);
+      if (detail > 0) {
+        ctx.fillStyle = '#64748b'; // stone armor plates
+        ctx.beginPath();
+        for (let i = 0; i < b2.length; i++) {
+          const e = items[b2[i]];
+          ctx.rect(e.x - 6, e.y - 6, 12, 12);
+        }
+        ctx.fill();
       }
-      ctx.fill();
     }
 
-    // Type 3: Healer (12x12 Emerald Block with Cross)
+    // Type 3: Shaman (Healer) - Cyan body + staff
     const b3 = buckets[3];
     if (b3.length > 0) {
-      ctx.fillStyle = '#2ecc71';
+      ctx.fillStyle = '#06b6d4';
       ctx.beginPath();
       for (let i = 0; i < b3.length; i++) {
         const e = items[b3[i]];
-        ctx.rect((e.x - 6) | 0, (e.y - 6) | 0, 12, 12);
+        if (detail === 0) {
+          ctx.rect(e.x - e.radius, e.y - e.radius, e.radius * 2, e.radius * 2);
+        } else {
+          ctx.moveTo(e.x + e.radius, e.y);
+          ctx.arc(e.x, e.y, e.radius, 0, TAU);
+        }
       }
       ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      for (let i = 0; i < b3.length; i++) {
-        const e = items[b3[i]];
-        ctx.rect((e.x - 1) | 0, (e.y - 4) | 0, 2, 8);
-        ctx.rect((e.x - 4) | 0, (e.y - 1) | 0, 8, 2);
+      if (detail > 0) {
+        ctx.fillStyle = '#4a2e15'; // wooden staff
+        ctx.beginPath();
+        for (let i = 0; i < b3.length; i++) {
+          const e = items[b3[i]];
+          ctx.rect(e.x + 4, e.y - 8, 2, 16);
+        }
+        ctx.fill();
       }
-      ctx.fill();
     }
 
-    // Type 4: Flyer (10x10 Stealth Delta Chevron)
+    // Type 4: Bat (Flyer) - Dark wings flapping
     const b4 = buckets[4];
     if (b4.length > 0) {
-      ctx.fillStyle = '#9b59b6';
+      ctx.fillStyle = '#1e293b';
+      const time = performance.now() * 0.015;
       ctx.beginPath();
       for (let i = 0; i < b4.length; i++) {
         const e = items[b4[i]];
-        const x = e.x | 0, y = e.y | 0;
-        ctx.moveTo(x, y - 6);
-        ctx.lineTo(x + 6, y + 4);
-        ctx.lineTo(x, y + 1);
-        ctx.lineTo(x - 6, y + 4);
+        if (detail === 0) {
+          ctx.rect(e.x - 4, e.y - 4, 8, 8);
+        } else {
+          const bob = Math.sin(time + e.x) * 1.5;
+          const flap = Math.sin(time * 2 + e.id * 0.5) * 4;
+          const angle = Math.atan2(e.vy, e.vx);
+          const cos = Math.cos(angle), sin = Math.sin(angle);
+          const p1x = e.x + 4 * cos, p1y = e.y + bob + 4 * sin; // nose
+          const p2x = e.x - 4 * cos - (8 + flap) * sin, p2y = e.y + bob - 4 * sin + (8 + flap) * cos; // left wing
+          const p3x = e.x - 2 * cos, p3y = e.y + bob - 2 * sin; // tail
+          const p4x = e.x - 4 * cos + (8 + flap) * sin, p4y = e.y + bob - 4 * sin - (8 + flap) * cos; // right wing
+          ctx.moveTo(p1x, p1y); ctx.lineTo(p2x, p2y); ctx.lineTo(p3x, p3y); ctx.lineTo(p4x, p4y);
+        }
       }
       ctx.fill();
     }
 
-    // Hit Flash (Damaged units only, budgeted to 80 units max)
+    ctx.globalAlpha = 1.0;
+
+    // Type 5: Troll Champion (Boss) — Large golden body with crown and aura ring
+    const b5 = buckets[5];
+    if (b5 && b5.length > 0) {
+      const time = performance.now() * 0.003;
+      for (let i = 0; i < b5.length; i++) {
+        const e = items[b5[i]];
+
+        // Aura ring (pulsing)
+        const auraPulse = 0.15 + Math.sin(time * 2) * 0.08;
+        ctx.strokeStyle = `rgba(250, 204, 21, ${auraPulse})`;
+        ctx.lineWidth = 3;
+        const auraR = e.auraRange || 150;
+        ctx.beginPath();
+        ctx.moveTo(e.x + auraR, e.y);
+        ctx.arc(e.x, e.y, auraR, 0, TAU);
+        ctx.stroke();
+
+        // Body — large circle
+        ctx.fillStyle = '#5d4e37';
+        ctx.beginPath();
+        ctx.moveTo(e.x + e.radius, e.y);
+        ctx.arc(e.x, e.y, e.radius, 0, TAU);
+        ctx.fill();
+
+        // Inner highlight
+        ctx.fillStyle = '#7a6b54';
+        ctx.beginPath();
+        ctx.moveTo(e.x + e.radius * 0.7, e.y - 3);
+        ctx.arc(e.x, e.y - 3, e.radius * 0.7, 0, TAU);
+        ctx.fill();
+
+        // Crown (three golden triangles)
+        ctx.fillStyle = '#facc15';
+        const crownY = e.y - e.radius - 4;
+        ctx.beginPath();
+        ctx.moveTo(e.x - 12, crownY + 6); ctx.lineTo(e.x - 8, crownY - 6); ctx.lineTo(e.x - 4, crownY + 6);
+        ctx.moveTo(e.x - 5, crownY + 6); ctx.lineTo(e.x, crownY - 10); ctx.lineTo(e.x + 5, crownY + 6);
+        ctx.moveTo(e.x + 4, crownY + 6); ctx.lineTo(e.x + 8, crownY - 6); ctx.lineTo(e.x + 12, crownY + 6);
+        ctx.fill();
+
+        // Crown jewels
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.moveTo(e.x + 3, crownY - 3);
+        ctx.arc(e.x, crownY - 3, 3, 0, TAU);
+        ctx.fill();
+
+        // Boss Health Bar (large, always visible)
+        const barW = e.radius * 3;
+        const barH = 5;
+        const barX = e.x - barW / 2;
+        const barY = e.y + e.radius + 6;
+        const pct = Math.max(0, e.hp / e.maxHp);
+
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+        ctx.fillStyle = pct > 0.5 ? '#facc15' : pct > 0.25 ? '#f97316' : '#dc2626';
+        ctx.fillRect(barX, barY, barW * pct, barH);
+        ctx.strokeStyle = '#4a2e15';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX - 1, barY - 1, barW + 2, barH + 2);
+      }
+    }
+
+    // Hit Flash (Damaged units only, budgeted to 40 units max)
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     let anyFlash = false;
-    let flashBudget = 80;
+    let flashBudget = 40;
     for (let i = 0; i < activeLen && flashBudget > 0; i++) {
       const e = items[activeList[i]];
       if (e.flashTimer > 0) {
@@ -277,14 +499,16 @@ export class Renderer {
     }
     if (anyFlash) ctx.fill();
 
-    // Health Bars (Wounded units ONLY — Batched into 3 draw calls via pre-buffered list)
-    const maxBarBudget = activeLen > 500 ? 150 : activeLen;
+    // Health Bars (Bosses, <30% HP, or flashed)
     if (!this._wounded) this._wounded = [];
     this._wounded.length = 0;
-    for (let i = 0; i < activeLen && this._wounded.length < maxBarBudget; i++) {
+    for (let i = 0; i < activeLen; i++) {
       const e = items[activeList[i]];
       if (e.hp < e.maxHp) {
-        this._wounded.push(e);
+        const pct = e.hp / e.maxHp;
+        if (e.type === 5 || pct < 0.3 || e.flashTimer > 0) {
+          this._wounded.push(e);
+        }
       }
     }
 
@@ -295,6 +519,7 @@ export class Renderer {
       ctx.beginPath();
       for (let i = 0; i < woundedCount; i++) {
         const e = this._wounded[i];
+        if (e.type === 5) continue;
         ctx.rect((e.x - e.radius) | 0, (e.y - e.radius - 5) | 0, e.radius * 2, 2.5);
       }
       ctx.fill();
@@ -304,6 +529,7 @@ export class Renderer {
       ctx.beginPath();
       for (let i = 0; i < woundedCount; i++) {
         const e = this._wounded[i];
+        if (e.type === 5) continue;
         const pct = e.hp / e.maxHp;
         if (pct > 0.5) {
           ctx.rect((e.x - e.radius) | 0, (e.y - e.radius - 5) | 0, (e.radius * 2 * pct) | 0, 2.5);
@@ -316,6 +542,7 @@ export class Renderer {
       ctx.beginPath();
       for (let i = 0; i < woundedCount; i++) {
         const e = this._wounded[i];
+        if (e.type === 5) continue;
         const pct = e.hp / e.maxHp;
         if (pct <= 0.5 && pct > 0) {
           ctx.rect((e.x - e.radius) | 0, (e.y - e.radius - 5) | 0, Math.max(1, (e.radius * 2 * pct) | 0), 2.5);
@@ -390,22 +617,26 @@ export class Renderer {
     const cx = state.mouseCol * c + HALF_CELL;
     const cy = state.mouseRow * c + HALF_CELL;
     const ok = state.canPlaceHere;
+    const r = HALF_CELL * 0.72;
 
-    ctx.fillStyle = ok ? 'rgba(74, 158, 255, 0.08)' : 'rgba(255, 71, 87, 0.08)';
-    ctx.strokeStyle = ok ? '#4a9eff' : '#ff4757';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([6, 6]);
+    ctx.fillStyle = ok ? 'rgba(56, 142, 60, 0.35)' : 'rgba(211, 47, 47, 0.35)';
+    ctx.strokeStyle = ok ? '#388e3c' : '#d32f2f';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect((cx - r) | 0, (cy - r) | 0, (r * 2) | 0, (r * 2) | 0, 4);
+    else ctx.rect((cx - r) | 0, (cy - r) | 0, (r * 2) | 0, (r * 2) | 0);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = def.color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, TAU);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.beginPath();
     ctx.arc(cx, cy, def.range, 0, TAU);
-    ctx.fill();
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = ok ? 'rgba(74, 158, 255, 0.35)' : 'rgba(255, 71, 87, 0.35)';
-    ctx.fillRect(state.mouseCol * c + 2, state.mouseRow * c + 2, c - 4, c - 4);
-    ctx.strokeStyle = ok ? '#4a9eff' : '#ff4757';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(state.mouseCol * c + 2, state.mouseRow * c + 2, c - 4, c - 4);
+    ctx.fill(); ctx.stroke();
   }
 
   // ── Selected Tower Radar Display ───────────────────────────────────
@@ -414,7 +645,7 @@ export class Renderer {
     const t = state.selectedTower;
     const def = TOWERS[t.type];
 
-    ctx.fillStyle = 'rgba(74, 158, 255, 0.05)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.beginPath();
     ctx.arc(t.cx, t.cy, t.range, 0, TAU);
     ctx.fill();
@@ -449,21 +680,25 @@ export class Renderer {
     const alpha = Math.min(1, state.announceTimer / 0.4);
     ctx.globalAlpha = alpha;
 
-    ctx.fillStyle = 'rgba(10, 16, 28, 0.82)';
+    const isBossWave = state.announceWave === 50;
+    const bgColor = isBossWave ? 'rgba(80, 20, 10, 0.9)' : 'rgba(30, 20, 10, 0.85)';
+    const borderColor = isBossWave ? 'rgba(250, 204, 21, 0.6)' : 'rgba(205, 133, 63, 0.4)';
+
+    ctx.fillStyle = bgColor;
     ctx.fillRect(CANVAS_W * 0.5 - 200, CANVAS_H * 0.5 - 45, 400, 90);
-    ctx.strokeStyle = 'rgba(74, 158, 255, 0.4)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = isBossWave ? 3 : 1.5;
     ctx.strokeRect(CANVAS_W * 0.5 - 200, CANVAS_H * 0.5 - 45, 400, 90);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '700 32px Rajdhani, sans-serif';
+    ctx.fillStyle = isBossWave ? '#facc15' : '#ffffff';
+    ctx.font = '700 32px Fredoka, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`SECTOR INVASION: WAVE ${state.announceWave}`, CANVAS_W * 0.5, CANVAS_H * 0.5 - 12);
+    ctx.fillText(isBossWave ? 'BOSS WAVE!' : `WAVE ${state.announceWave}`, CANVAS_W * 0.5, CANVAS_H * 0.5 - 12);
 
-    ctx.font = '600 16px Rajdhani, sans-serif';
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillText(state.announceSubtext || 'DEFENSE PROTOCOLS ENGAGED', CANVAS_W * 0.5, CANVAS_H * 0.5 + 20);
+    ctx.font = '600 16px Fredoka, sans-serif';
+    ctx.fillStyle = isBossWave ? '#ff6b35' : '#cd853f';
+    ctx.fillText(state.announceSubtext || 'DEFEND THE KINGDOM', CANVAS_W * 0.5, CANVAS_H * 0.5 + 20);
 
     ctx.globalAlpha = 1;
     ctx.textAlign = 'start';

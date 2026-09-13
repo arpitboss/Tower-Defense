@@ -17,9 +17,10 @@ import { InputManager } from './input.js';
 export const State = { MENU: 0, PLAYING: 1, PAUSED: 2, OVER: 3, WON: 4 };
 
 export class GameEngine {
-  constructor(bgCanvas, gameCanvas) {
+  constructor(bgCanvas, gameCanvas, audio) {
     this.renderer = new Renderer(bgCanvas, gameCanvas);
     this.input = new InputManager(gameCanvas, this);
+    this.audio = audio || null;
 
     this.pathData = buildPathData();
     this.pathCells = buildPathCellSet();
@@ -31,11 +32,11 @@ export class GameEngine {
     this.spatialHash = new SpatialHash();
     this.waves = new WaveManager(generateWaves(), this.pathData);
 
-    // State
     this.state = State.MENU;
     this.lives = GAME.startLives;
     this.gold = GAME.startGold;
     this.score = 0;
+    this.bestScore = parseInt(localStorage.getItem('td_best_score') || '0', 10);
     this.gameSpeed = 1;
 
     // Interaction
@@ -127,11 +128,15 @@ export class GameEngine {
 
     if (this.state === State.PLAYING) {
       this.accumulator += dt * this.gameSpeed;
-      // Guarantee exactly 1 fixed-timestep simulation step per render frame
-      if (this.accumulator >= GAME.fixedDt) {
+      // Run multiple simulation steps to actually speed up gameplay
+      let steps = 0;
+      while (this.accumulator >= GAME.fixedDt && steps < 5) {
         this._tick(GAME.fixedDt);
-        this.accumulator %= GAME.fixedDt;
+        this.accumulator -= GAME.fixedDt;
+        steps++;
       }
+      // Prevent spiral of death — discard excess
+      if (this.accumulator > GAME.fixedDt * 3) this.accumulator = 0;
     }
 
     this._render();
@@ -172,6 +177,9 @@ export class GameEngine {
     // 4. Status Auras
     this.enemies.applyHealers(dt, this.spatialHash);
 
+    // 4b. Boss Aura — slow nearby towers
+    this._applyBossAura();
+
     const t4 = performance.now();
     // 5. Tower Targeting & Fire commands
     const fireCommands = this.towers.update(dt, this.spatialHash, this.enemies.pool);
@@ -181,6 +189,9 @@ export class GameEngine {
     this.teslaArcs.length = 0;
     for (let i = 0; i < fireCommands.length; i++) {
       const cmd = fireCommands[i];
+      if (this.audio && !this.stressMode) {
+        this.audio.play('shoot_' + TOWERS[cmd.tower.type].name.toLowerCase());
+      }
       if (cmd.tower.chain > 0) {
         this._chainLightning(cmd.tower, cmd.targetId);
       } else {
@@ -206,6 +217,7 @@ export class GameEngine {
       const burstCount = Math.min(leaked.length, 3);
       for (let i = 0; i < leaked.length; i++) {
         this.lives--;
+        if (this.audio) this.audio.play('base_hit');
       }
       for (let i = 0; i < burstCount; i++) {
         this.particles.burst(basePt.x, basePt.y, '#ff4757', 6);
@@ -215,6 +227,7 @@ export class GameEngine {
     // 10. Win / Loss state evaluations
     if (this.lives <= 0) {
       this.lives = 0;
+      if (this.state !== State.OVER && this.audio) this.audio.play('gameover');
       this.state = State.OVER;
       this.onStateChange?.();
     } else if (
@@ -287,16 +300,55 @@ export class GameEngine {
   }
 
   _damageEnemy(e, damage, piercing) {
-    const effective = piercing ? damage : Math.max(1, damage - e.armor);
+    // Boss damage reduction: takes 50% reduced damage
+    let effective = piercing ? damage : Math.max(1, damage - e.armor);
+    if (e.boss) effective = Math.ceil(effective * 0.5);
     e.hp -= effective;
     e.flashTimer = 0.08;
 
     if (e.hp <= 0) {
       this.gold += e.reward;
       this.score += e.reward * 2;
-      const burstAmt = this.stressMode ? 1 : 8;
-      this.particles.burst(e.x, e.y, e.color, burstAmt, { speed: 70, life: 0.3 });
+      if (this.score > this.bestScore) {
+        this.bestScore = this.score;
+        localStorage.setItem('td_best_score', String(this.bestScore));
+      }
+      const burstAmt = this.stressMode ? 1 : (e.boss ? 30 : 8);
+      this.particles.burst(e.x, e.y, e.boss ? '#facc15' : e.color, burstAmt, { speed: e.boss ? 150 : 70, life: e.boss ? 0.8 : 0.3 });
+      if (e.boss && !this.stressMode) {
+        // Massive gold explosion ring for boss kill
+        this.particles.ring(e.x, e.y, '#facc15', 100);
+        this.particles.burst(e.x, e.y, '#ff6b35', 20, { speed: 120, life: 0.6 });
+        if (this.audio) this.audio.play('build'); // Triumphant chime
+      }
       this.enemies.kill(e.id);
+      if (this.audio && !this.stressMode && Math.random() < 0.3) this.audio.play('die');
+    } else {
+      if (this.audio && !this.stressMode && Math.random() < 0.1) this.audio.play('hit');
+    }
+  }
+
+  _applyBossAura() {
+    const bossBucket = this.enemies.typeBuckets[5];
+    if (!bossBucket || bossBucket.length === 0) return;
+
+    const items = this.enemies.pool.items;
+    const towers = this.towers.towers;
+
+    for (let b = 0; b < bossBucket.length; b++) {
+      const boss = items[bossBucket[b]];
+      if (!boss.active || boss.auraRange <= 0) continue;
+      const rangeSq = boss.auraRange * boss.auraRange;
+
+      for (let t = 0; t < towers.length; t++) {
+        const tw = towers[t];
+        const dx = tw.cx - boss.x;
+        const dy = tw.cy - boss.y;
+        if (dx * dx + dy * dy <= rangeSq) {
+          // Temporarily halve fire rate by doubling cooldown floor
+          tw.cooldown = Math.max(tw.cooldown, 0.5 / tw.rof);
+        }
+      }
     }
   }
 
@@ -367,9 +419,14 @@ export class GameEngine {
           const t = this.towers.place(this.placingType, col, row);
           this.selectedTower = t;
           this.placingType = -1;
+          if (this.audio) this.audio.play('build');
           this.onStatsChange?.();
           this.onSelectionChange?.();
+        } else {
+          if (this.audio) this.audio.play('error');
         }
+      } else {
+        if (this.audio) this.audio.play('error');
       }
     } else {
       const existing = this.towers.getTowerAt(col, row);
@@ -398,12 +455,15 @@ export class GameEngine {
     const def = TOWERS[t.type];
     if (t.level >= def.upgrades.length) return;
     const cost = def.upgrades[t.level].cost;
-    if (this.gold < cost) return;
-
-    this.gold -= cost;
-    this.towers.upgrade(t);
-    this.onStatsChange?.();
-    this.onSelectionChange?.();
+    if (this.gold >= cost) {
+      this.gold -= cost;
+      this.towers.upgrade(t);
+      if (this.audio) this.audio.play('build');
+      this.onStatsChange?.();
+      this.onSelectionChange?.();
+    } else {
+      if (this.audio) this.audio.play('error');
+    }
   }
 
   sellSelected() {
@@ -411,6 +471,7 @@ export class GameEngine {
     const refund = this.towers.sell(this.selectedTower);
     this.gold += refund;
     this.selectedTower = null;
+    if (this.audio) this.audio.play('click');
     this.onStatsChange?.();
     this.onSelectionChange?.();
   }
@@ -425,10 +486,12 @@ export class GameEngine {
       this.announceTimer = 2.0;
       this.announceWave = this.waves.waveNum;
 
-      if (this.waves.waveNum <= GAME.totalWaves) {
+      if (this.waves.waveNum === GAME.totalWaves) {
+        this.announceSubtext = 'THE TROLL CHAMPION APPROACHES!';
+      } else if (this.waves.waveNum <= GAME.totalWaves) {
         const currentWaveDef = this.waves.waves[this.waves.currentWave];
         const totalIncoming = currentWaveDef.groups.reduce((s, g) => s + g.count, 0);
-        this.announceSubtext = `${totalIncoming} HOSTILE CONTACTS DETECTED`;
+        this.announceSubtext = `${totalIncoming} enemies approaching`;
       }
       this.onStatsChange?.();
     }
@@ -491,7 +554,7 @@ export class GameEngine {
     const totalPath = this.pathData.totalLen;
     for (let i = 0; i < 5000; i++) {
       const e = this.enemies.spawn(
-        i % ENEMIES.length,
+        i % 5, // Types 0-4 only, skip boss (type 5)
         this.pathData,
         2.5 + Math.random() * 1.5,
         0.85 + Math.random() * 0.3,

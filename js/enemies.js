@@ -24,6 +24,10 @@ function makeEnemy(id) {
     color: '#fff',
     radius: 6,
     flashTimer: 0,
+    boss: false,
+    auraRange: 0,
+    auraSlow: 0,
+    auraTimer: 0,
   };
 }
 
@@ -31,7 +35,7 @@ export class EnemyManager {
   constructor() {
     this.pool = new Pool(POOLS.enemies, makeEnemy);
     // Categorized ID buckets for instant batched draw calls without iteration filtering
-    this.typeBuckets = [[], [], [], [], []];
+    this.typeBuckets = [[], [], [], [], [], []];
   }
 
   spawn(typeIdx, pathData, hpMul, spdMul) {
@@ -59,6 +63,10 @@ export class EnemyManager {
     e.color = def.color;
     e.radius = def.radius;
     e.flashTimer = 0;
+    e.boss = !!def.boss;
+    e.auraRange = def.auraRange || 0;
+    e.auraSlow = def.auraSlow || 0;
+    e.auraTimer = 0;
 
     // Track in type bucket
     const bucket = this.typeBuckets[typeIdx];

@@ -7,37 +7,52 @@
   <meta name="description" content="A high-performance browser-based tower defense game with 50 waves, 5 tower types, and 5 enemy types">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- SVG Gradients -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="grad-red" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient>
+      <linearGradient id="grad-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></linearGradient>
+      <linearGradient id="grad-cyan" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0369a1"/></linearGradient>
+      <linearGradient id="grad-green" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient>
+    </defs>
+  </svg>
   <div id="app">
     <!-- HUD Bar -->
     <header id="hud">
       <div class="hud-group">
         <div class="hud-item lives">
-          <span class="hud-icon">♥</span>
+          <svg class="hud-icon" width="16" height="16" viewBox="0 0 24 24"><path fill="url(#grad-red)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           <div class="hud-label">LIVES</div>
           <div class="hud-val" id="lives-val">20</div>
         </div>
         <div class="hud-item gold">
-          <span class="hud-icon">⬡</span>
-          <div class="hud-label">CREDITS</div>
+          <svg class="hud-icon" width="16" height="16" viewBox="0 0 24 24"><path fill="url(#grad-gold)" d="M12 2l9 5v10l-9 5-9-5V7l9-5z"/></svg>
+          <div class="hud-label">GOLD</div>
           <div class="hud-val" id="gold-val">200</div>
         </div>
         <div class="hud-item wave">
-          <span class="hud-icon">◈</span>
+          <svg class="hud-icon" width="16" height="16" viewBox="0 0 24 24"><path fill="url(#grad-cyan)" d="M12 2L2 12l10 10 10-10L12 2z"/></svg>
           <div class="hud-label">WAVE</div>
           <div class="hud-val" id="wave-val">0 / 50</div>
         </div>
         <div class="hud-item score">
-          <span class="hud-icon">★</span>
+          <svg class="hud-icon" width="16" height="16" viewBox="0 0 24 24"><path fill="url(#grad-green)" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
           <div class="hud-label">SCORE</div>
           <div class="hud-val" id="score-val">0</div>
+        </div>
+        <div class="hud-item highscore">
+          <svg class="hud-icon" width="16" height="16" viewBox="0 0 24 24"><path fill="url(#grad-gold)" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <div class="hud-label">BEST</div>
+          <div class="hud-val" id="highscore-val">0</div>
         </div>
       </div>
 
       <div class="hud-group controls">
+        <button id="btn-sound" title="Toggle Sound">🔊</button>
         <button id="btn-pause" title="Pause (Space)">⏸</button>
         <button id="btn-play" class="active" title="1× Speed">▶</button>
         <button id="btn-fast" title="2× Speed">⏩</button>
@@ -88,6 +103,21 @@
       <h1 id="overlay-title"></h1>
       <p id="overlay-msg"></p>
       <div id="overlay-btns"></div>
+    </div>
+  </div>
+
+  <!-- Tutorial Overlay -->
+  <div id="tutorial-overlay" class="hidden" style="position: fixed; inset: 0; background: rgba(20, 10, 5, 0.88); z-index: 200; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div style="background: var(--surface); border: 4px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 40px; max-width: 500px;">
+      <h2 style="font-size: 28px; color: var(--gold); margin-bottom: 20px; letter-spacing: 2px; font-family: var(--font);">HOW TO PLAY</h2>
+      <ul style="list-style: none; padding: 0; color: var(--text); line-height: 1.8; font-size: 16px; margin-bottom: 30px; font-family: var(--font);">
+        <li style="margin-bottom: 12px;"><strong>1. Place Towers:</strong> Click a tower in the sidebar, then click an empty tile near the path.</li>
+        <li style="margin-bottom: 12px;"><strong>2. Upgrade:</strong> Select a placed tower to view stats and upgrade options.</li>
+        <li style="margin-bottom: 12px;"><strong>3. Send Waves:</strong> Click "Send Wave" to start the next assault.</li>
+        <li style="margin-bottom: 12px;"><strong>4. Controls:</strong> Space = Pause, 1-5 = Select tower type, Esc = Cancel.</li>
+        <li><strong>5. Survive:</strong> Defend the Kingdom Castle for 50 waves!</li>
+      </ul>
+      <button id="btn-close-tutorial" style="width: 100%; padding: 14px; background: var(--accent); border: 4px solid var(--border); border-radius: 8px; color: #fff; font-family: var(--font); font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 var(--border); transition: transform 0.1s;">UNDERSTOOD</button>
     </div>
   </div>
 

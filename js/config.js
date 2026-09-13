@@ -27,16 +27,16 @@ export const SPATIAL_CELL = 64;
 
 export const TOWERS = [
   {
-    name: 'Blaster',
+    name: 'Archer',
     desc: 'Fast single-target',
     cost: 50,
     damage: 8,
     range: 128,
     rof: 3.0,         // rounds per second
     projSpeed: 420,
-    color: '#4a9eff',
-    glow: '#2a6ecf',
-    projColor: '#7ab8ff',
+    color: '#d4a373',
+    glow: '#8b5a2b',
+    projColor: '#ffffff',
     upgrades: [
       { cost: 40,  damage: 13,  range: 140, rof: 3.5 },
       { cost: 70,  damage: 20,  range: 155, rof: 4.2 },
@@ -44,16 +44,16 @@ export const TOWERS = [
     ],
   },
   {
-    name: 'Sniper',
+    name: 'Artillery',
     desc: 'Long range, ignores armor',
     cost: 100,
     damage: 50,
     range: 260,
     rof: 0.65,
     projSpeed: 900,
-    color: '#ff6b35',
-    glow: '#cc4a15',
-    projColor: '#ffaa75',
+    color: '#8c7b75',
+    glow: '#4a403d',
+    projColor: '#4a403d',
     piercing: true,
     upgrades: [
       { cost: 80,  damage: 80,  range: 285, rof: 0.75 },
@@ -62,16 +62,16 @@ export const TOWERS = [
     ],
   },
   {
-    name: 'Frost',
+    name: 'Mage',
     desc: 'Area slow + damage',
     cost: 75,
     damage: 5,
     range: 115,
     rof: 1.8,
     projSpeed: 280,
-    color: '#00d4ff',
-    glow: '#009acc',
-    projColor: '#80e8ff',
+    color: '#0ea5e9',
+    glow: '#0284c7',
+    projColor: '#7dd3fc',
     slow: 0.45,
     slowDur: 2.0,
     splash: 55,
@@ -82,16 +82,16 @@ export const TOWERS = [
     ],
   },
   {
-    name: 'Cannon',
+    name: 'Bombard',
     desc: 'Heavy splash damage',
     cost: 125,
     damage: 35,
     range: 135,
     rof: 0.9,
     projSpeed: 320,
-    color: '#ff4757',
-    glow: '#cc2737',
-    projColor: '#ff8a94',
+    color: '#d97706',
+    glow: '#92400e',
+    projColor: '#fcd34d',
     splash: 48,
     upgrades: [
       { cost: 85,  damage: 55,  range: 145, rof: 1.0, splash: 55 },
@@ -100,7 +100,7 @@ export const TOWERS = [
     ],
   },
   {
-    name: 'Tesla',
+    name: 'Sorcerer',
     desc: 'Chain lightning, multi-hit',
     cost: 200,
     damage: 18,
@@ -108,7 +108,7 @@ export const TOWERS = [
     rof: 2.2,
     color: '#a855f7',
     glow: '#7c3aed',
-    projColor: '#c084fc',
+    projColor: '#e9d5ff',
     chain: 3,
     chainRange: 65,
     upgrades: [
@@ -122,13 +122,15 @@ export const TOWERS = [
 // ── Enemy Definitions ────────────────────────────────────────────────
 
 export const ENEMIES = [
-  { name: 'Scout',   hp: 30,  speed: 82,  armor: 0, reward: 5,  color: '#ff6b6b', radius: 6  },
-  { name: 'Soldier', hp: 85,  speed: 48,  armor: 2, reward: 10, color: '#ee5a24', radius: 8  },
-  { name: 'Tank',    hp: 320, speed: 28,  armor: 8, reward: 25, color: '#c0392b', radius: 12 },
-  { name: 'Healer',  hp: 55,  speed: 44,  armor: 0, reward: 20, color: '#2ecc71', radius: 8,
+  { name: 'Goblin', hp: 30,  speed: 82,  armor: 0, reward: 5,  color: '#84cc16', radius: 6  },
+  { name: 'Orc',    hp: 85,  speed: 48,  armor: 2, reward: 10, color: '#22c55e', radius: 8  },
+  { name: 'Ogre',   hp: 320, speed: 28,  armor: 8, reward: 25, color: '#475569', radius: 12 },
+  { name: 'Shaman', hp: 55,  speed: 44,  armor: 0, reward: 20, color: '#06b6d4', radius: 8,
     healRate: 6, healRange: 64 },
-  { name: 'Flyer',   hp: 65,  speed: 72,  armor: 0, reward: 15, color: '#9b59b6', radius: 7,
+  { name: 'Bat',    hp: 65,  speed: 72,  armor: 0, reward: 15, color: '#1e293b', radius: 7,
     flying: true },
+  { name: 'Troll Champion', hp: 12000, speed: 20, armor: 15, reward: 500, color: '#facc15', radius: 24,
+    boss: true, auraRange: 150, auraSlow: 0.5 },
 ];
 
 // ── Map Path ─────────────────────────────────────────────────────────
@@ -213,8 +215,9 @@ function makeWave(n) {
   // Flyers: wave 20+
   if (n >= 20) push(g, 4, 1 + (n - 19) * 0.48, interp(1.6, 0.28, n / 50));
 
-  // Wave 50 boss burst: extra tanks and healers
+  // Wave 50 boss burst: the Troll Champion with extra tanks and healers
   if (n === 50) {
+    push(g, 5, 1, 3.0); // The Boss
     push(g, 2, 15, 0.4);
     push(g, 3, 8, 0.6);
   }
