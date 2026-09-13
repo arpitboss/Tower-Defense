@@ -32,7 +32,7 @@ export class AudioManager {
       if (!AC) return;
       this.ctx = new AC();
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = 0.18;
+      this.masterGain.gain.value = 0.6; // Increased from 0.18
       this.masterGain.connect(this.ctx.destination);
       this.initialized = true;
     } catch (e) {
@@ -60,45 +60,45 @@ export class AudioManager {
 
     switch (type) {
       case 'shoot_archer':
-        this._tone('triangle', 1100, 500, 0.06, 0.12);
+        this._tone('triangle', 1100, 500, 0.15, 0.12);
         break;
       case 'shoot_artillery':
-        this._noise(0.15, 0.25);
-        this._tone('sine', 80, 35, 0.06, 0.2);
+        this._noise(0.25, 0.25);
+        this._tone('sine', 80, 35, 0.15, 0.2);
         break;
       case 'shoot_mage':
-        this._tone('sine', 700, 1100, 0.04, 0.12);
+        this._tone('sine', 700, 1100, 0.12, 0.12);
         break;
       case 'shoot_bombard':
-        this._noise(0.12, 0.2);
-        this._tone('sine', 60, 25, 0.08, 0.25);
+        this._noise(0.2, 0.2);
+        this._tone('sine', 60, 25, 0.2, 0.25);
         break;
       case 'shoot_sorcerer':
-        this._tone('sine', 400, 150, 0.06, 0.1);
-        this._tone('sine', 800, 300, 0.03, 0.08);
+        this._tone('sine', 400, 150, 0.15, 0.1);
+        this._tone('sine', 800, 300, 0.1, 0.08);
         break;
       case 'hit':
-        this._tone('square', 120, 60, 0.04, 0.04);
+        this._tone('square', 120, 60, 0.1, 0.04);
         break;
       case 'die':
-        this._tone('sine', 800, 1200, 0.08, 0.08);
+        this._tone('sine', 800, 1200, 0.15, 0.08);
         break;
       case 'base_hit':
-        this._tone('sine', 90, 30, 0.2, 0.35);
+        this._tone('sine', 90, 30, 0.4, 0.35);
         break;
       case 'build':
-        this._tone('sine', 400, 600, 0.1, 0.15);
-        this._tone('sine', 600, 800, 0.08, 0.1, 0.1);
+        this._tone('sine', 400, 600, 0.2, 0.15);
+        this._tone('sine', 600, 800, 0.15, 0.1, 0.1);
         break;
       case 'error':
-        this._tone('triangle', 200, 140, 0.1, 0.15);
+        this._tone('triangle', 200, 140, 0.2, 0.15);
         break;
       case 'click':
-        this._tone('sine', 500, 300, 0.06, 0.04);
+        this._tone('sine', 500, 300, 0.15, 0.04);
         break;
       case 'gameover':
-        this._tone('sine', 300, 80, 0.15, 1.2);
-        this._tone('sine', 200, 50, 0.1, 1.5, 0.3);
+        this._tone('sine', 300, 80, 0.3, 1.2);
+        this._tone('sine', 200, 50, 0.2, 1.5, 0.3);
         break;
     }
   }

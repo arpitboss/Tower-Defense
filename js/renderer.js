@@ -74,8 +74,11 @@ export class Renderer {
     ctx.stroke();
 
     // Enemy Cave (Spawn)
-    const spX = pts[0][0], spY = pts[0][1];
-    ctx.fillStyle = '#1a1a1a'; // Dark cave hole
+    let spX = pts[0][0], spY = pts[0][1];
+    // Shift spawn icon right if it's on the edge
+    if (spX < 30) spX = 30;
+
+    ctx.fillStyle = '#1e1c19'; // Cave dark interior
     ctx.beginPath();
     if (ctx.ellipse) {
       ctx.ellipse(spX, spY, 20, 24, 0, 0, TAU);
@@ -92,11 +95,14 @@ export class Renderer {
 
     ctx.fillStyle = '#4a2e15';
     ctx.font = 'bold 12px Fredoka, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('ENEMY CAVE', spX + 24, spY - 24);
+    ctx.textAlign = 'left';
+    ctx.fillText('ENEMY CAVE', spX - 15, spY - 35);
 
     // Kingdom Castle (Base)
-    const bsX = pts[pts.length - 1][0], bsY = pts[pts.length - 1][1];
+    let bsX = pts[pts.length - 1][0], bsY = pts[pts.length - 1][1];
+    // Shift base icon left if it's on the edge
+    if (bsX > CANVAS_W - 40) bsX = CANVAS_W - 40;
+
     ctx.fillStyle = '#8c7b75'; // Castle grey
     ctx.fillRect(bsX - 20, bsY - 20, 40, 40);
     // Castle battlements
@@ -111,7 +117,8 @@ export class Renderer {
     ctx.fill();
 
     ctx.fillStyle = '#4a2e15';
-    ctx.fillText('KINGDOM CASTLE', bsX - 24, bsY - 30);
+    ctx.textAlign = 'right';
+    ctx.fillText('KINGDOM CASTLE', bsX + 15, spY === bsY ? bsY - 35 : bsY - 35);
 
     ctx.textAlign = 'start';
   }
