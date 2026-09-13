@@ -229,10 +229,6 @@ export class GameEngine {
     if (this.frameIdx % 6 === 0) {
       this.onStatsChange?.();
     }
-
-    if (this.stressMode && this.frameIdx % 60 === 0) {
-      console.log(`[Tick Profile ms] EnemyMove: ${(t2-t1).toFixed(2)}, SpatialRebuild: ${(t3-t2).toFixed(2)}, Healers: ${(t4-t3).toFixed(2)}, Towers: ${(t5-t4).toFixed(2)}, ProjUpdate: ${(t7-t6).toFixed(2)}`);
-    }
   }
 
   // ── Combat Resolution ──────────────────────────────────────────────
@@ -357,10 +353,6 @@ export class GameEngine {
       announceWave: this.announceWave,
       announceSubtext: this.announceSubtext,
     });
-    const t1 = performance.now();
-    if (this.stressMode && this.frameIdx % 60 === 0) {
-      console.log(`[Render Profile ms] Total: ${(t1 - t0).toFixed(2)}`);
-    }
   }
 
   // ── Player Actions ─────────────────────────────────────────────────
