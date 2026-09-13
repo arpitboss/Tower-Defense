@@ -1,13 +1,13 @@
 # Bastion Protocol — High-Performance Browser Tower Defense
 
-A browser-based sci-fi tower defense game engineered with a multi-layer HTML5 Canvas 2D engine. Built from scratch with zero external dependencies, designed to deliver 60 FPS gameplay across 50 procedural waves and maintain real-time performance during mega-swarm combat scenarios of 5,000+ simultaneous enemies.
+A browser-based fantasy tower defense game engineered with a multi-layer HTML5 Canvas 2D engine. Built from scratch with zero external dependencies, designed to deliver 60 FPS gameplay across 50 procedural waves and maintain real-time performance during mega-swarm combat scenarios of 5,000+ simultaneous enemies.
 
 ---
 
 ## 🎮 Play & Controls
 
 ### Live Interface
-- **HUD Bar**: Real-time monitoring of Core Integrity (Lives), Credits, Wave Progression, Score, and Engine Diagnostics (FPS / Entity counts).
+- **HUD Bar**: Real-time monitoring of Core Integrity (Lives), Gold, Wave Progression, Score, and BEST score persistence, along with Engine Diagnostics (FPS / Entity counts).
 - **Control Bar**:
   - `⏸` Pause / Resume (`Space`)
   - `▶` 1× Standard Speed
@@ -15,7 +15,7 @@ A browser-based sci-fi tower defense game engineered with a multi-layer HTML5 Ca
   - `⚡` 3× Turbo Acceleration
   - `↺` Restart Simulation
 - **Tower Shop**: Hotkeys `1` through `5` for rapid placement.
-- **Selection Panel**: Click any placed tower to view detailed specifications, upgrade to higher marks, or decommission for a 70% credit refund.
+- **Selection Panel**: Click any placed tower to view detailed specifications, upgrade to higher marks, or sell for a 70% gold refund.
 
 ---
 
@@ -57,6 +57,12 @@ Canvas 2D curve tessellation (`ctx.arc()`) across thousands of units incurs mass
 Game physics runs at a deterministic $60\text{Hz}$ fixed timestep (`GAME.fixedDt = 1/60`) with delta-time accumulation:
 - Logic is completely decoupled from display refresh rates.
 - Tight accumulator capping prevents spiral-of-death slowdowns if the host system experiences a background CPU spike.
+- 2x and 3x Speed mechanics natively scale the simulation loop, allowing fast-forwarded gameplay while maintaining physics accuracy.
+
+### 7. Procedural Web Audio Engine (`audio.js`)
+Zero external assets. All sound effects (arrows, magic, explosions, UI clicks) are procedurally generated using the `AudioContext` API.
+- Implements custom oscillator waveforms (sine, triangle, square) and white noise buffers.
+- Features strict event throttling to prevent cacophony during massive 5,000-unit swarms.
 
 ---
 
@@ -64,11 +70,11 @@ Game physics runs at a deterministic $60\text{Hz}$ fixed timestep (`GAME.fixedDt
 
 | Tower | Cost | Range | RoF | Damage | Special Properties |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Blaster** | 50g | 128px | 3.0/s | 8 | Rapid single-target laser; high rate of fire. |
-| **Sniper** | 100g | 260px | 0.65/s | 50 | Ultra-long range, armor-piercing kinetic dart. |
-| **Frost** | 75g | 115px | 1.8/s | 5 | Cryo field slowing enemies by up to 45% (stacks). |
-| **Cannon** | 125g | 135px | 0.9/s | 35 | High-explosive shell with 48px splash radius. |
-| **Tesla** | 200g | 95px | 2.2/s | 18 | Arc lightning jumping between up to 3 nearby enemies. |
+| **Archer** | 50g | 128px | 3.0/s | 8 | Rapid single-target volley; high rate of fire. |
+| **Artillery** | 100g | 260px | 0.65/s | 50 | Ultra-long range, armor-piercing kinetic projectile. |
+| **Mage** | 75g | 115px | 1.8/s | 5 | Frost magic slowing enemies by up to 45% (stacks). |
+| **Bombard** | 125g | 135px | 0.9/s | 35 | High-explosive blast with 48px splash radius. |
+| **Sorcerer** | 200g | 95px | 2.2/s | 18 | Arc lightning jumping between up to 3 nearby enemies. |
 
 *Each tower features 3 upgrade tiers enhancing range, damage, rate of fire, and specialized effects (splash radius, chain count, slow intensity).*
 
@@ -78,11 +84,12 @@ Game physics runs at a deterministic $60\text{Hz}$ fixed timestep (`GAME.fixedDt
 
 | Unit | HP | Speed | Armor | Reward | Strategic Behavior |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Scout** | 30 | 82 px/s | 0 | 5g | Fast, swarm-based reconnaissance unit. |
-| **Soldier** | 85 | 48 px/s | 2 | 10g | Standard armored infantry; resists light attacks. |
-| **Tank** | 320 | 28 px/s | 8 | 25g | Heavy armored dreadnought; requires piercing or concentrated fire. |
-| **Healer** | 55 | 44 px/s | 0 | 20g | Emits periodic repair pulses restoring nearby damaged allies. |
-| **Flyer** | 65 | 72 px/s | 0 | 15g | Agile aerial craft; immune to ground cryo-slow fields. |
+| **Goblin** | 30 | 82 px/s | 0 | 5g | Fast, swarm-based reconnaissance unit. |
+| **Orc** | 85 | 48 px/s | 2 | 10g | Standard armored infantry; resists light attacks. |
+| **Ogre** | 320 | 28 px/s | 8 | 25g | Heavy armored behemoth; requires piercing or concentrated fire. |
+| **Shaman** | 55 | 44 px/s | 0 | 20g | Emits periodic repair pulses restoring nearby damaged allies. |
+| **Bat** | 65 | 72 px/s | 0 | 15g | Agile aerial beast; immune to ground frost-slow fields. |
+| **Troll Champion** | 8000 | 18 px/s | 15 | 500g | Wave 50 Boss. 50% damage reduction, emits a massive aura that halves tower fire rates. |
 
 ---
 
