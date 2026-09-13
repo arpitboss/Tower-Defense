@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bastion Protocol — Tower Defense</title>
+  <meta name="description" content="A high-performance browser-based tower defense game with 50 waves, 5 tower types, and 5 enemy types">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- HUD Bar -->
+    <header id="hud">
+      <div class="hud-group">
+        <div class="hud-item lives">
+          <span class="hud-icon">♥</span>
+          <div class="hud-label">LIVES</div>
+          <div class="hud-val" id="lives-val">20</div>
+        </div>
+        <div class="hud-item gold">
+          <span class="hud-icon">⬡</span>
+          <div class="hud-label">CREDITS</div>
+          <div class="hud-val" id="gold-val">200</div>
+        </div>
+        <div class="hud-item wave">
+          <span class="hud-icon">◈</span>
+          <div class="hud-label">WAVE</div>
+          <div class="hud-val" id="wave-val">0 / 50</div>
+        </div>
+        <div class="hud-item score">
+          <span class="hud-icon">★</span>
+          <div class="hud-label">SCORE</div>
+          <div class="hud-val" id="score-val">0</div>
+        </div>
+      </div>
+
+      <div class="hud-group controls">
+        <button id="btn-pause" title="Pause (Space)">⏸</button>
+        <button id="btn-play" class="active" title="1× Speed">▶</button>
+        <button id="btn-fast" title="2× Speed">⏩</button>
+        <button id="btn-turbo" title="3× Speed">⚡</button>
+        <button id="btn-restart" title="Restart">↺</button>
+      </div>
+
+      <div class="hud-group perf">
+        <span id="fps-val">60 FPS</span>
+        <span id="entity-val" class="entity-count"></span>
+      </div>
+    </header>
+
+    <!-- Main Area -->
+    <main id="main">
+      <div id="game-area">
+        <canvas id="layer-bg"></canvas>
+        <canvas id="layer-game"></canvas>
+      </div>
+
+      <aside id="sidebar">
+        <section id="tower-shop"></section>
+
+        <section id="tower-info" class="hidden">
+          <h3 id="info-name"></h3>
+          <div id="info-stats"></div>
+          <div class="info-actions">
+            <button id="btn-upgrade" class="action-btn upgrade">UPGRADE</button>
+            <button id="btn-sell" class="action-btn sell">SELL</button>
+          </div>
+        </section>
+
+        <section id="wave-section">
+          <div id="wave-preview"></div>
+          <button id="btn-send-wave" class="wave-btn">SEND WAVE 1</button>
+        </section>
+
+        <section id="tools">
+          <button id="btn-stress" class="stress-btn" title="Spawn 5000 enemies + 100 towers">⚡ STRESS TEST</button>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Overlay (menu / pause / game over) -->
+  <div id="overlay" class="hidden">
+    <div id="overlay-box">
+      <h1 id="overlay-title"></h1>
+      <p id="overlay-msg"></p>
+      <div id="overlay-btns"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
